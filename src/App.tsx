@@ -69,7 +69,7 @@ export const App = () => {
                     </LoadingButton>
                 </Stack>
             </form>
-            {alumno && <Card sx={{ width: 480 }}>
+            {alumno && <Card sx={{ maxWidth: 480 }}>
                 <CardContent sx={{ mb: 'unset' }}>
                     <Typography variant="body1" color="GrayText">DNI: {alumno.dni}</Typography>
                     <Typography variant="h5">{alumno.name}</Typography>
