@@ -52,7 +52,7 @@ export const App = () => {
 
     return (
         <Stack direction="column" alignItems="center" spacing={2}>
-            <Typography variant="h1">DNInator</Typography>
+            <Typography variant="h3">proa.dni</Typography>
             <form onSubmit={submitQuery}>
                 <Stack direction="column" alignItems="center" spacing={2}>
                     <TextField
