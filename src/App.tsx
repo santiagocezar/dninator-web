@@ -1,10 +1,15 @@
-import { Button, Card, CardContent, CardHeader, Divider, List, ListItem, ListItemIcon, ListItemText, Stack, TextField, Typography } from '@mui/material'
-import { Alumno } from './types'
+import { Card, CardContent, CardHeader, Divider, List, ListItem, ListItemIcon, ListItemText, Stack, TextField, Typography } from '@mui/material'
+import { LoadingButton } from '@mui/lab'
+import { Alumno, ServerError } from './types'
 import { Home, Cake, Place } from '@mui/icons-material'
-import { ChangeEvent, useMemo, useState } from 'react'
+import { ChangeEvent, FormEvent, useMemo, useState } from 'react'
+
+
 
 export const App = () => {
     const [alumno, setAlumno] = useState<Alumno | null>()
+    const [loading, setLoading] = useState(false)
+    const [error, setError] = useState<string | null>(null)
     const [dni, setDNI] = useState('')
 
     const birthDate = useMemo(() => {
@@ -25,23 +30,46 @@ export const App = () => {
             setDNI(e.target.value)
     }
 
-    function submitQuery() {
+    function submitQuery(e: FormEvent) {
+        e.preventDefault()
+        setError(null)
+        setLoading(true)
         fetch(`https://4l4qv4m1s1.execute-api.sa-east-1.amazonaws.com/?dni=${dni}`)
             .then(r => r.json())
-            .then(o => Alumno.guard(o)
-                ? setAlumno(o)
-                : console.error('oops')
-            )
+            .then(o => {
+                setLoading(false)
+                if (Alumno.guard(o))
+                    setAlumno(o)
+                else if (ServerError.guard(o))
+                    setError(o.message)
+                else {
+                    setError('Unknown error')
+                    console.error(o)
+                }
+            })
+            .catch(e => setError(e.message))
     }
 
     return (
         <Stack direction="column" alignItems="center" spacing={2}>
             <Typography variant="h1">DNInator</Typography>
-            <TextField variant="filled" label="N° de documento"
-                onChange={changedDNI}
-            />
-            <Button onClick={submitQuery} variant="contained">Buscar</Button>
-            {alumno && <Card sx={{ minWidth: 480 }}>
+            <form onSubmit={submitQuery}>
+                <Stack direction="column" alignItems="center" spacing={2}>
+                    <TextField
+                        variant="filled" label="N° de documento"
+                        error={error != null}
+                        helperText={error}
+                        onChange={changedDNI}
+                    />
+                    <LoadingButton
+                        type="submit"
+                        loading={loading}
+                        variant="contained">
+                        Buscar
+                    </LoadingButton>
+                </Stack>
+            </form>
+            {alumno && <Card sx={{ width: 480 }}>
                 <CardContent sx={{ mb: 'unset' }}>
                     <Typography variant="body1" color="GrayText">DNI: {alumno.dni}</Typography>
                     <Typography variant="h5">{alumno.name}</Typography>
@@ -51,7 +79,7 @@ export const App = () => {
                                 <Home />
                             </ListItemIcon>
                             <ListItemText>
-                                {alumno.addresses}
+                                {alumno.city}, {alumno.province}
                             </ListItemText>
                         </ListItem>
                         <ListItem>
@@ -76,7 +104,7 @@ export const App = () => {
                                         <Place />
                                     </ListItemIcon>
                                     <ListItemText>
-                                        {c.address}, {c.city} {c.province}
+                                        {c.address}, {c.city}, {c.province}
                                     </ListItemText>
                                 </ListItem>
                             </List>
